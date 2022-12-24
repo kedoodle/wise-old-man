@@ -13,3 +13,7 @@ func New() *Client {
 		baseURL:    "https://api.wiseoldman.net/v2",
 	}
 }
+
+type Error struct {
+	Message string `json:"message"`
+}

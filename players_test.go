@@ -43,26 +43,53 @@ func TestUpdatePlayer(t *testing.T) {
 	assert.NotNil(t, pd.LatestSnapshot)
 }
 
-func TestUpdatePlayerUsernameTooLong(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, http.MethodPost, r.Method)
-		assert.Equal(t, "/players/long%20username", r.URL.RequestURI())
-		assert.Equal(t, "application/json", r.Header.Get("Accept"))
-
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"message":"Validation error: Username must be between 1 and 12 characters long."}`))
-	})
-	server := httptest.NewServer(handler)
-	defer server.Close()
-
-	client := &Client{
-		httpClient: http.DefaultClient,
-		baseURL:    server.URL,
+func TestUpdatePlayerInvalidUsername(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		username             string
+		expectedErrorMessage string
+	}{
+		{
+			name:                 "long username",
+			username:             "long username",
+			expectedErrorMessage: "validation error: username must be between 1 and 12 characters long",
+		},
+		{
+			name:                 "whitespace only username",
+			username:             " ",
+			expectedErrorMessage: "validation error: username must be defined",
+		},
+		{
+			name:                 "underscore only username",
+			username:             "_",
+			expectedErrorMessage: "validation error: username must be defined",
+		},
+		{
+			name:                 "dash only username",
+			username:             "-",
+			expectedErrorMessage: "validation error: username must be defined",
+		},
+		{
+			name:                 "empty username",
+			username:             "_ -",
+			expectedErrorMessage: "validation error: username must be defined",
+		},
+		{
+			name:                 "special character username",
+			username:             "$pecial",
+			expectedErrorMessage: "validation error: username cannot contain any special characters",
+		},
 	}
-	ctx := context.Background()
 
-	pd, err := client.UpdatePlayer(ctx, "long username")
-	assert.Nil(t, pd)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Username must be between 1 and 12 characters long")
+
+	client := New()
+	ctx := context.Background()
+	
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			pd, err := client.UpdatePlayer(ctx, tc.username)
+			assert.Nil(t, pd)
+			assert.EqualError(t, err, tc.expectedErrorMessage)
+		})
+	}
 }

@@ -21,7 +21,10 @@ func TestUpdatePlayer(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		w.Write(body)
+		_, err = w.Write(body)
+		if err != nil {
+			t.Fatal(err)
+		}
 	})
 	server := httptest.NewServer(handler)
 	defer server.Close()

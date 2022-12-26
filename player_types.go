@@ -60,10 +60,10 @@ type Skills struct {
 }
 
 type Boss struct {
-	Metric string `json:"metric"`
-	Kills  int    `json:"kills"`
-	Rank   int    `json:"rank"`
-	EHB    int    `json:"ehb"`
+	Metric string  `json:"metric"`
+	Kills  int     `json:"kills"`
+	Rank   int     `json:"rank"`
+	EHB    float64 `json:"ehb"`
 }
 
 type Bosses struct {
